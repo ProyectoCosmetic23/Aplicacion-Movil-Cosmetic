@@ -107,96 +107,58 @@ class _PurchasesScreenState extends State<ProductsScreen> {
                     final product = searchResults.isNotEmpty ? searchResults[index] : products[index];
                     return Card(
                       margin: const EdgeInsets.all(8),
-                      child: ListTile(
-                        title: Row(
-                          children: [
-                            Icon(Icons.inventory_outlined),
-                            SizedBox(width: 8),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                      child: Stack(
+                        children: [
+                          ListTile(
+                            title: Row(
                               children: [
-                                Text(
-                                  '${product['name_product']}',
-                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                Container(
+                                  width: 60, // Ancho fijo para el contenedor
+                                  child: Icon(Icons.inventory_2, size: 50),
                                 ),
-                                Text(
-                                  'Cantidad: ${product['quantity']}',
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '${product['name_product']}',
+                                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                    ),
+                                    Text(
+                                      'Cantidad: ${product['quantity']}',
+                                    ),
+                                    Text(
+                                      'Precio: ${_formatPrice(product['cost_price'])}',
+                                      style: TextStyle(fontSize: 16, color: Colors.purple),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
-                          ],
-                        ),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'Precio: ${_formatPrice(product['cost_price'])}',
-                                  style: TextStyle(fontSize: 16, color: Colors.purple),
-                                ),
-                                ElevatedButton(
-                                  onPressed: () {
-                                    showDialog(
-                                      context: context,
-                                      builder: (BuildContext context) {
-                                        return AlertDialog(
-                                          title: const Text(
-                                            'Detalles Producto',
-                                            style: TextStyle(
-                                              color: Color.fromRGBO(102, 51, 153, 1),
-                                            ),
-                                          ),
-                                          content: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Text(
-                                                'Producto: ${product['name_product']}',
-                                                style: TextStyle(fontSize: 16),
-                                              ),
-                                              Text(
-                                                'Cantidad: ${product['quantity']}',
-                                                style: TextStyle(fontSize: 16),
-                                              ),
-                                              Text(
-                                                'Precio: ${_formatPrice(product['cost_price'])}',
-                                                style: TextStyle(fontSize: 16),
-                                              ),
-                                              Text(
-                                                'Estado: ${product['state_product']}',
-                                                style: TextStyle(fontSize: 16),
-                                              ),
-                                            ],
-                                          ),
-                                          actions: [
-                                            TextButton(
-                                              onPressed: () {
-                                                Navigator.of(context).pop();
-                                              },
-                                              child: Text(
-                                                'Cerrar',
-                                                style: TextStyle(
-                                                  color: Color.fromRGBO(102, 51, 153, 1),
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        );
-                                      },
-                                    );
-                                  },
-                                  style: ElevatedButton.styleFrom(primary: Color.fromRGBO(102, 51, 153, 1)),
-                                  child: Text(
-                                    'Detalles',
-                                    style: TextStyle(color: Colors.white),
+                          ),
+                          Positioned(
+                            top: 8,
+                            right: 8,
+                            child: Container(
+                              width: 12,
+                              height: 20,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.grey.withOpacity(0.5),
+                                    spreadRadius: 2,
+                                    blurRadius: 4,
+                                    offset: Offset(0, 2), // changes position of shadow
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
+                              child: CircleAvatar(
+                                backgroundColor: product['state_product'] == 'Activo' ? Colors.green : Colors.red,
+                                radius: 6,
+                              ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     );
                   },
@@ -204,20 +166,29 @@ class _PurchasesScreenState extends State<ProductsScreen> {
               ],
             ),
           ),
-          SlidingUpPanel(
-            maxHeight: 250,
+            SlidingUpPanel(
+            minHeight: calculateMinHeight(products),
+            maxHeight: 500,
             panel: Column(
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: 30,
-                      child: Divider(
-                        color: Colors.black,
-                        thickness: 2,
+              Row(
+  mainAxisAlignment: MainAxisAlignment.center,
+  children: [
+    GestureDetector(
+      onTap: () {
+        setState(() {
+          isPanelOpen = !isPanelOpen;
+        });
+      },
+      child: Container(
+        width: 30,
+        child: Icon(
+          isPanelOpen ? Icons.arrow_downward : Icons.arrow_upward,
+          color: Color.fromRGBO(102, 51, 153, 1),
+          size: 30,
                       ),
                     ),
+    ),
                   ],
                 ),
                 Text(
@@ -232,12 +203,15 @@ class _PurchasesScreenState extends State<ProductsScreen> {
                             final product = products[index];
                             final cantidad = product['quantity'];
                             if (cantidad is int && cantidad < 6) {
-                              return ListTile(
-                                title: Text(product['name_product'], style: TextStyle(color: Colors.black)),
-                                subtitle: Text(cantidad.toString(), style: TextStyle(color: Colors.black)),
-                                trailing: Text(
-                                  'Precio: ${_formatPrice(product['cost_price'])}',
-                                  style: TextStyle(color: Colors.black),
+                              return Card(
+                                margin: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                                child: ListTile(
+                                  title: Text(product['name_product']),
+                                  subtitle: Text('Cantidad: $cantidad'),
+                                  trailing: Text(
+                                    'Precio: ${_formatPrice(product['cost_price'])}',
+                                    style: TextStyle(color: Colors.black),
+                                  ),
                                 ),
                               );
                             } else {
@@ -265,9 +239,25 @@ class _PurchasesScreenState extends State<ProductsScreen> {
     );
   }
 
-  String _formatPrice(String price) {
-    double parsedPrice = double.parse(price);
-    return NumberFormat.currency(symbol: '', locale: 'es_CO').format(parsedPrice);
+String _formatPrice(String price) {
+  double parsedPrice = double.parse(price);
+  NumberFormat formatter = NumberFormat.currency(locale: 'es_CO', decimalDigits: 0);
+  String formattedPrice = formatter.format(parsedPrice);
+  // Eliminar el símbolo "EUR" al final y agregar el símbolo "$" al principio
+  return '\$$formattedPrice'.replaceAll('EUR', '');
+}
+
+
+
+  double calculateMinHeight(List<dynamic> products) {
+    double totalHeight = 0;
+    for (var product in products) {
+      final cantidad = product['quantity'];
+      if (cantidad is int && cantidad < 6) {
+        totalHeight += 30; // Altura estimada de un ListTile
+      }
+    }
+    return totalHeight;
   }
 }
 

@@ -1,31 +1,41 @@
 import 'dart:convert';
+import 'package:consumir_api/models/purchase_model.dart';
 import 'package:consumir_api/widgets/menu_appbar.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 
-String formatDate(DateTime? date) {
-  return date == null ? 'N/A' : DateFormat('dd/MM/yyyy').format(date);
+String formatDate(dynamic date) {
+  try {
+    if (date != null) {
+      final cleanDate = date.toString().split(' ')[0];
+      final formattedDate = DateFormat('yyyy-MM-dd').parse(cleanDate);
+      return DateFormat('dd/MM/yyyy').format(formattedDate);
+    } else {
+      return 'N/A'; // Retornar un valor predeterminado si la fecha es nula
+    }
+  } catch (e) {
+    print('Error parsing date: $e');
+    return 'Fecha inválida';
+  }
 }
 
-String formatCurrency(dynamic amount) {
-  if (amount == null) return 'N/A';
-
-  double? numericAmount = amount is String ? double.tryParse(amount) : amount is num ? amount.toDouble() : amount;
-  if (numericAmount == null) return 'N/A';
-
-  final colombianPesoFormat = NumberFormat.currency(locale: 'es_CO', symbol: 'COP');
-  return colombianPesoFormat.format(numericAmount);
+String _formatPrice(String? price) {
+  if (price == null) return 'N/A';
+  double parsedPrice = double.parse(price);
+  NumberFormat formatter =
+      NumberFormat.currency(locale: 'es_CO', decimalDigits: 0);
+  String formattedPrice = formatter.format(parsedPrice);
+  // Eliminar el símbolo "EUR" al final y agregar el símbolo "$" al principio
+  return '\$$formattedPrice'.replaceAll('EUR', '');
 }
-
-
-
 
 class PurchaseDetailScreen extends StatefulWidget {
   final int purchaseId;
 
-  const PurchaseDetailScreen({required this.purchaseId, Key? key}) : super(key: key);
+  const PurchaseDetailScreen({required this.purchaseId, Key? key})
+      : super(key: key);
 
   @override
   State<PurchaseDetailScreen> createState() => _PurchaseDetailScreenState();
@@ -49,7 +59,8 @@ class _PurchaseDetailScreenState extends State<PurchaseDetailScreen> {
   Future<void> fetchPurchases() async {
     final String token = await getAuthToken();
     final response = await http.get(
-      Uri.parse('https://cosmetic-api-yrcb.onrender.com/api/purchases/${widget.purchaseId}'),
+      Uri.parse(
+          'https://cosmetic-api-yrcb.onrender.com/api/purchases/${widget.purchaseId}'),
       headers: {
         'X-Token': '$token',
       },
@@ -74,97 +85,139 @@ class _PurchaseDetailScreenState extends State<PurchaseDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-           
-          const SizedBox(height: 10),
+            SizedBox(height: 10),
             Row(
               children: [
-                Text('Fecha de Compra: ', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold ),
-              ),
+                Text('No: ',
+                    style:
+                        TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 SizedBox(width: 10),
-                Text('${purchases?['purchase_date'] ?? 'N/A'}',style: TextStyle(fontSize: 18))
-              ],), 
+                Text('${purchases['invoice_number'] ?? 'N/A'}',
+                    style: TextStyle(fontSize: 14)),
+              ],
+            ),
             Row(
               children: [
-                Text('Fecha de Registro:', style: TextStyle(fontSize: 18 ,fontWeight: FontWeight.bold),),
+                Text('Proveedor:',
+                    style:
+                        TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                SizedBox(width: 10),
+                Text('${purchases?['provider']?['name_provider'] ?? 'N/A'}',
+                    style: TextStyle(fontSize: 14)),
+              ],
+            ),
+            Row(
+              children: [
+                Text('Fecha de Compra: ',
+                    style:
+                        TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                SizedBox(width: 10),
+                Text('${formatDate(purchases?['purchase_date'])}',
+                    style: TextStyle(fontSize: 14)),
+              ],
+            ),
+            Row(
+              children: [
+                Text('Fecha de Registro: ',
+                    style:
+                        TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 SizedBox(width: 10),
                 Text(
-                '${formatDate(DateTime.parse(purchases?['record_date_purchase'])) ?? 'N/A'}',
-                style: TextStyle(fontSize: 18),
-              )
-
-              ],) ,
-            Row(
-              children: [
-                Text('Proveedor:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
-                SizedBox(width: 10),
-                Text('${purchases?['provider']['name_provider'] ?? 'N/A'}',style: TextStyle(fontSize: 18))
-              ],) ,
-            Container(
-            width: 200,
-            child: Wrap(
-              children: [
-                Text('Observación:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
-                SizedBox(width: 10),
-                Text(
-                  '${purchases?['observation_purchase'] ?? 'N/A'}',
-                  style: TextStyle(fontSize: 18),
-                  overflow: TextOverflow.clip,
-                  softWrap: true,
+                  '${formatDate(purchases?['record_date_purchase']) ?? 'N/A'}',
+                  style: TextStyle(fontSize: 14),
                 ),
               ],
             ),
-          ),
             Row(
               children: [
-                Text('Total de Compra:', style: TextStyle(fontSize: 18,fontWeight: FontWeight.bold),),
+                Text('Total de Compra:',
+                    style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.purple,
+                        fontWeight: FontWeight.bold)),
                 SizedBox(width: 10),
-               Text(
-              '${formatCurrency(purchases?['total_purchase']) ?? 'N/A'}',
-              style: TextStyle(fontSize: 18),
-            )
+                Text(
+                  '${_formatPrice(purchases?['total_purchase']) ?? 'N/A'}',
+                  style: TextStyle(fontSize: 18, color: Colors.purple),
+                ),
               ],
-            ) ,
-            SizedBox(height: 15),
-  
-           Expanded(
-  child: SingleChildScrollView(
-    scrollDirection: Axis.horizontal,
-    child: DataTable(
-      columns: [
-        DataColumn(label: Text('Producto',style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold))),
-        DataColumn(label: Text('Categoría' ,style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold) ,)),
-        DataColumn(label: Text('Precio de Compra',style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold),)),
-        DataColumn(label: Text('Precio de IVA',style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold))),
-        DataColumn(label: Text('Precio de Venta',style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold))),
-        DataColumn(label: Text('Cantidad',style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold))),
-      ],
-      rows: List<DataRow>.generate(
-        (purchases?['purchase_details'] as List<dynamic>?)?.length ?? 0,
-        (index) {
-          final productDetail = (purchases?['purchase_details'] as List<dynamic>?)?.elementAt(index);
+            ),
+            SizedBox(
+                height:
+                    15), // Espacio entre el contenido anterior y la línea separadora
+            Divider(), // Línea separadora
+            SizedBox(height: 15), // Espacio entre la línea separadora y el Card
 
-          if (productDetail == null) {
-            return DataRow(cells: []);
-          }
-
-          return DataRow(
-            cells: [
-              DataCell(Text('${productDetail['id_product']}')),
-              DataCell(Text('${productDetail['id_category']}')),
-              DataCell(Text('${productDetail['cost_price']}')),
-              DataCell(Text('${productDetail['vat']}')),
-              DataCell(Text('${productDetail['selling_price']}')),
-              DataCell(Text('${productDetail['product_quantity']}')),
-            ],
-          );
-        },
-      ),
-    ),
-  ),
-),
-
-
-       
+            Expanded(
+              child: SingleChildScrollView(
+                child: Card(
+                  elevation: 3,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 10, horizontal: 10),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Center(
+                          child: Text(
+                            'Detalles',
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        SizedBox(
+                            height:
+                                20), // Espacio entre el título y los detalles del producto
+                        ...(purchases?['purchase_details'] as List<dynamic>?)
+                                ?.map((productDetail) {
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    crossAxisAlignment: CrossAxisAlignment
+                                        .start, // Alinear los elementos al inicio
+                                    children: [
+                                      Icon(Icons.inventory_2,
+                                          size: 50), // Icono más grande
+                                      SizedBox(
+                                          width:
+                                              8), // Espacio entre el icono y la información del producto
+                                      Column(
+                                        crossAxisAlignment: CrossAxisAlignment
+                                            .start, // Alinear los elementos al inicio
+                                        children: [
+                                          Text(
+                                            'Producto:  ${(purchases?['purchase_details'] as List<dynamic>?)?.isNotEmpty ?? false ? (purchases?['purchase_details'] as List<dynamic>?)?.first['product']['name_product'] ?? 'N/A' : 'N/A'}',
+                                            style: TextStyle(fontSize: 14),
+                                          ),
+                                          Text(
+                                              'Precio de Compra: ${productDetail['cost_price']}',
+                                              style: TextStyle(fontSize: 14)),
+                                          Text(
+                                              'Precio de IVA: ${productDetail['vat']}',
+                                              style: TextStyle(fontSize: 14)),
+                                          Text(
+                                              'Precio de Venta: ${productDetail['selling_price']}',
+                                              style: TextStyle(fontSize: 14)),
+                                          Text(
+                                              'Cantidad: ${productDetail['product_quantity']}',
+                                              style: TextStyle(fontSize: 14)),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(
+                                      height:
+                                          20), // Espacio entre los detalles de los productos
+                                ],
+                              );
+                            })?.toList() ??
+                            [],
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),
