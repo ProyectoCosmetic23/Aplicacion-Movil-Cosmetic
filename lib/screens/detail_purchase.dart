@@ -131,7 +131,7 @@ class _PurchaseDetailScreenState extends State<PurchaseDetailScreen> {
               ),
               Row(
                 children: [
-                  Text('Total de Compra:',
+                  Text('Total:',
                       style: TextStyle(
                           fontSize: 18,
                           color: Colors.purple,

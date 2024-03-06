@@ -91,7 +91,7 @@ class _PurchasesScreenState extends State<ProductsScreen> {
                         onChanged: searchItems,
                         controller: _searchController,
                         decoration: const InputDecoration(
-                          labelText: 'Buscar Producto',
+                          labelText: 'Buscar',
                           suffixIcon: Icon(Icons.search),
                         ),
                       ),
