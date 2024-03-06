@@ -254,7 +254,7 @@ String _formatPrice(String price) {
     for (var product in products) {
       final cantidad = product['quantity'];
       if (cantidad is int && cantidad < 6) {
-        totalHeight += 30; // Altura estimada de un ListTile
+        totalHeight += 25; // Altura estimada de un ListTile
       }
     }
     return totalHeight;
