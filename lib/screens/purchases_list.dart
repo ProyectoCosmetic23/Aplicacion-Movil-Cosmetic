@@ -100,7 +100,7 @@ class _PurchasesScreenState extends State<PurchasesScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 10),
                 Column(
                   children: searchResults.map((purchase) {
                     var state_purchase;
@@ -115,7 +115,7 @@ class _PurchasesScreenState extends State<PurchasesScreen> {
                         );
                       },
                       child: Card(
-                        margin: const EdgeInsets.all(8),
+                        margin: const EdgeInsets.all(5),
                         child: Stack(
                           children: [
                             ListTile(

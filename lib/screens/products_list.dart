@@ -98,7 +98,7 @@ class _PurchasesScreenState extends State<ProductsScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 10),
                 ListView.builder(
                   shrinkWrap: true,
                   physics: NeverScrollableScrollPhysics(),
@@ -106,7 +106,7 @@ class _PurchasesScreenState extends State<ProductsScreen> {
                   itemBuilder: (BuildContext context, int index) {
                     final product = searchResults.isNotEmpty ? searchResults[index] : products[index];
                     return Card(
-                      margin: const EdgeInsets.all(8),
+                      margin: const EdgeInsets.all(5),
                       child: Stack(
                         children: [
                           ListTile(
