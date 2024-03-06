@@ -1,5 +1,5 @@
-import 'package:consumir_api/main.dart';
 import 'package:flutter/material.dart';
+import 'package:consumir_api/main.dart';
 
 class MenuAppbar extends StatefulWidget implements PreferredSizeWidget {
   final bool showMenu;
@@ -19,27 +19,51 @@ class _MenuAppbarState extends State<MenuAppbar> {
   @override
   Widget build(BuildContext context) {
     final isDarkTheme = Theme.of(context).brightness == Brightness.dark;
-    final iconColor = isDarkTheme ? Colors.white : Colors.black;
 
     return AppBar(
       backgroundColor: isDarkTheme
           ? Color.fromARGB(29, 10, 105, 112)
           : Color.fromRGBO(102, 51, 153, 1),
-      title: Center(
-        child: Image.asset('assets/img/logo.png', height: 100, color: Colors.grey[400]),
+      title: Row(
+        mainAxisAlignment: MainAxisAlignment.start, // Alineación de la fila a la izquierda
+        crossAxisAlignment: CrossAxisAlignment.center, // Alineación de la fila verticalmente
+        children: [
+          SizedBox(width: 100), // Espacio adicional antes de la imagen
+          Image.asset('assets/img/logo.png', height: 100, color: Colors.grey[400]),
+        ],
       ),
+      automaticallyImplyLeading: false, // Esto elimina la flecha hacia atrás
       actions: [
         IconButton(
           onPressed: () {
-            final myapp = MyApp.of(context);
-            if (myapp != null) {
-              myapp.changeTheme();
-            }
+            showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  title: const Text('Cerrar sesión'),
+                  content: const Text('¿Estás seguro de que deseas cerrar la sesión?'),
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        Navigator.popUntil(context, (route) => route.isFirst);
+                      },
+                      child: const Text('Sí'),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        // Cerrar el diálogo
+                        Navigator.of(context).pop();
+                      },
+                      child: const Text('No', style: TextStyle(color: Colors.red)),
+                    ),
+                  ],
+                );
+              },
+            );
           },
-          icon: Theme.of(context).brightness == Brightness.light
-              ? Icon(Icons.dark_mode, color: iconColor) // Color del ícono ajustado aquí
-              : Icon(Icons.light_mode, color: iconColor), // Color del ícono ajustado aquí
-        )
+          icon: Icon(Icons.exit_to_app, color: Colors.white), // Icono de cerrar sesión
+        ),
       ],
     );
   }
