@@ -20,6 +20,8 @@ class _PurchasesScreenState extends State<ProductsScreen> {
   String editedEstado = '';
   bool isPanelOpen = false;
 
+  final PanelController _panelController = PanelController();
+
   @override
   void initState() {
     super.initState();
@@ -166,29 +168,35 @@ class _PurchasesScreenState extends State<ProductsScreen> {
               ],
             ),
           ),
-            SlidingUpPanel(
+          SlidingUpPanel(
+            controller: _panelController,
             minHeight: calculateMinHeight(products),
             maxHeight: 500,
             panel: Column(
               children: [
-              Row(
-  mainAxisAlignment: MainAxisAlignment.center,
-  children: [
-    GestureDetector(
-      onTap: () {
-        setState(() {
-          isPanelOpen = !isPanelOpen;
-        });
-      },
-      child: Container(
-        width: 30,
-        child: Icon(
-          isPanelOpen ? Icons.arrow_downward : Icons.arrow_upward,
-          color: Color.fromRGBO(102, 51, 153, 1),
-          size: 30,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          isPanelOpen = !isPanelOpen;
+                        });
+                        if (!isPanelOpen) {
+                          _panelController.close();
+                        } else {
+                          _panelController.open();
+                        }
+                      },
+                      child: Container(
+                        width: 30,
+                        child: Icon(
+                          isPanelOpen ? Icons.arrow_downward : Icons.arrow_upward,
+                          color: Color.fromRGBO(102, 51, 153, 1),
+                          size: 30,
+                        ),
                       ),
                     ),
-    ),
                   ],
                 ),
                 Text(
@@ -208,9 +216,12 @@ class _PurchasesScreenState extends State<ProductsScreen> {
                                 child: ListTile(
                                   title: Text(product['name_product']),
                                   subtitle: Text('Cantidad: $cantidad'),
-                                  trailing: Text(
-                                    'Precio: ${_formatPrice(product['cost_price'])}',
-                                    style: TextStyle(color: Colors.black),
+                                  trailing: SizedBox(
+                                    width: 100, // Ancho fijo para alinear los precios
+                                    child: Text(
+                                      'Precio: ${_formatPrice(product['cost_price'])}',
+                                      style: TextStyle(color: Colors.black),
+                                    ),
                                   ),
                                 ),
                               );
@@ -239,15 +250,13 @@ class _PurchasesScreenState extends State<ProductsScreen> {
     );
   }
 
-String _formatPrice(String price) {
-  double parsedPrice = double.parse(price);
-  NumberFormat formatter = NumberFormat.currency(locale: 'es_CO', decimalDigits: 0);
-  String formattedPrice = formatter.format(parsedPrice);
-  // Eliminar el símbolo "EUR" al final y agregar el símbolo "$" al principio
-  return '\$$formattedPrice'.replaceAll('EUR', '');
-}
-
-
+  String _formatPrice(String price) {
+    double parsedPrice = double.parse(price);
+    NumberFormat formatter = NumberFormat.currency(locale: 'es_CO', decimalDigits: 0);
+    String formattedPrice = formatter.format(parsedPrice);
+    // Eliminar el símbolo "EUR" al final y agregar el símbolo "$" al principio
+    return '\$$formattedPrice'.replaceAll('EUR', '');
+  }
 
   double calculateMinHeight(List<dynamic> products) {
     double totalHeight = 0;
